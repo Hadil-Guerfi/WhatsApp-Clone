@@ -8,26 +8,27 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
 } from "react-native";
-import firebase from "../config/index"; 
+import firebase from "../config/index";
 import { useRoute } from "@react-navigation/native";
 
 export default function Chat() {
   const route = useRoute();
-  const { currentUser, secondUser } = route.params; 
-  const [messages, setMessages] = useState([]); 
-  const [messageText, setMessageText] = useState(""); 
+  const { currentUser, secondUser } = route.params;
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+
+  // Generate unique chatId based on user IDs
   const chatId =
     currentUser.uid < secondUser.id
       ? `${currentUser.uid}_${secondUser.id}`
-      : `${secondUser.id}_${currentUser.uid}`; 
+      : `${secondUser.id}_${currentUser.uid}`;
 
   const messagesRef = firebase.database().ref(`chats/${chatId}/messages`);
-console.log({currentUser,secondUser});
 
   // Fetch messages
   useEffect(() => {
     const unsubscribe = messagesRef.on("value", (snapshot) => {
-      if (snapshot.exists()) {
+      if (snapshot && snapshot.val()) {
         const data = snapshot.val();
         const messagesArray = Object.keys(data).map((key) => ({
           id: key,
@@ -35,12 +36,12 @@ console.log({currentUser,secondUser});
         }));
         setMessages(messagesArray.sort((a, b) => a.timestamp - b.timestamp)); // Sort by timestamp
       } else {
-        setMessages([]);
+        setMessages([]); // No messages found
       }
     });
 
-    return () => unsubscribe(); 
-  }, []);
+    return () => unsubscribe(); // Clean up the listener
+  }, [chatId]); // Include chatId to refetch when it changes
 
   // Send a new message
   const sendMessage = () => {
