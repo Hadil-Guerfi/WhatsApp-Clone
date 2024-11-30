@@ -9,9 +9,15 @@ const Tab = createMaterialBottomTabNavigator();
 export  default function Home () {
   return (
     <Tab.Navigator>
-      <Tab.Screen name="ListProfil" component={ListProfil}></Tab.Screen>
+      <Tab.Screen
+        name="ListProfil"
+        component={ListProfil}
+        initialParams={{ currentId: currentId }}></Tab.Screen>
       <Tab.Screen name="Groupe" component={Groupe}></Tab.Screen>
-      <Tab.Screen name="MyProfil" component={MyProfil}></Tab.Screen>
+      <Tab.Screen
+        name="MyProfil"
+        component={MyProfil}
+        initialParams={{ currentId: currentId }}></Tab.Screen>
       <Tab.Screen name="Chat" component={Chat}></Tab.Screen>
     </Tab.Navigator>
   );

@@ -41,9 +41,14 @@ style={styles.textinputstyle}/>
   <Button title="submit" color='#98C9E1'  onPress={()=>{
     console.log(email);
     console.log(pass);
-    auth.signInWithEmailAndPassword(email,pass).
-    then(()=> {props.navigation.replace("Home")}).
-    catch((error)=> alert(error));
+    auth
+      .signInWithEmailAndPassword(email, pass)
+      .then(() => {
+        props.navigation.replace("Home", {
+          currentid: auth.currentUser.uid,
+        });
+      })
+      .catch((error) => alert(error));
 }}></Button>
 
 <Button  title='Exit' color='#98C9E1'  onPress={()=>{

@@ -7,7 +7,7 @@ import {
   Text,
   TouchableHighlight,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native"; // Import navigation hook
+import { useNavigation, useRoute } from "@react-navigation/native"; // Import navigation hooks
 import firebase from "../../config/index";
 
 const database = firebase.database();
@@ -17,15 +17,18 @@ export default function MyProfil() {
   const [nom, setNom] = useState("");
   const [pseudo, setPseudo] = useState("");
   const [phone, setPhone] = useState("");
-  const navigation = useNavigation(); // Initialize navigation
+
+  const navigation = useNavigation(); // Navigation instance
+  const route = useRoute(); // Get route params
+  const { currentId } = route.params; // Destructure currentId from params
 
   const handleSaveProfile = () => {
     if (nom && pseudo && phone) {
-      const key = ref_tableProfile.push().key;
-      const ref_unprofil = ref_tableProfile.child("unprofil" + key);
+      const ref_unprofil = ref_tableProfile.child(`unprofil${currentId}`);
 
       ref_unprofil
         .set({
+          currentId,
           nom,
           pseudo,
           phone,

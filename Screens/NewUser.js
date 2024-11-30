@@ -41,7 +41,7 @@ style={styles.textinputstyle}/>
 <View style={{flexDirection:"row",gap:15}}>
   <Button title="submit" color='#98C9E1'  onPress={()=>{
   auth.createUserWithEmailAndPassword(email,pwd).
-  then(()=> {props.navigation.replace("Home")}).
+  then(()=> {props.navigation.replace("Home",{currentid:auth.currentUser.uid})}).
   catch((error)=> alert(error));
 }}></Button>
 

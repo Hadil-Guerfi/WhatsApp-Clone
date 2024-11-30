@@ -18,6 +18,10 @@ export default function ListProfil() {
   const [profiles, setProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation(); // Hook to navigate
+  const [currentUser, setCurrentUser] = useState({});
+
+  const route = useRoute(); // Get route params
+  const { currentId } = route.params; // Destructure currentId from params
 
   useEffect(() => {
     const fetchProfiles = () => {
@@ -28,7 +32,19 @@ export default function ListProfil() {
             id: key,
             ...data[key],
           }));
-          setProfiles(profilesArray);
+
+          const foundUser = profilesArray.find(
+            (profile) => profile.id === currentId
+          );
+
+          if (foundUser) {
+            setCurrentUser(foundUser);
+            setProfiles(
+              profilesArray.filter((profile) => profile.id !== currentId)
+            ); // Exclude the current user from the list
+          } else {
+            setProfiles(profilesArray);
+          }
         } else {
           setProfiles([]);
         }
@@ -84,7 +100,7 @@ export default function ListProfil() {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.chatButton}
-        onPress={() => navigation.navigate("Chat", { profile: item })}>
+        onPress={() => navigation.navigate("Chat", {currentUser, secondUser: item })}>
         <Text style={styles.chatButtonText}>Start Chat</Text>
       </TouchableOpacity>
     </View>
