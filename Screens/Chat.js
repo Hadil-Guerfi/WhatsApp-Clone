@@ -1,69 +1,150 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { useRoute } from "@react-navigation/native"; // to get the params
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+} from "react-native";
+import firebase from "../config/index"; 
+import { useRoute } from "@react-navigation/native";
 
 export default function Chat() {
   const route = useRoute();
-  const { currentUser, secondUser } = route.params; // Retrieve both users from params
+  const { currentUser, secondUser } = route.params; 
+  const [messages, setMessages] = useState([]); 
+  const [messageText, setMessageText] = useState(""); 
+  const chatId =
+    currentUser.uid < secondUser.id
+      ? `${currentUser.uid}_${secondUser.id}`
+      : `${secondUser.id}_${currentUser.uid}`; 
+
+  const messagesRef = firebase.database().ref(`chats/${chatId}/messages`);
+console.log({currentUser,secondUser});
+
+  // Fetch messages
+  useEffect(() => {
+    const unsubscribe = messagesRef.on("value", (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        const messagesArray = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+        }));
+        setMessages(messagesArray.sort((a, b) => a.timestamp - b.timestamp)); // Sort by timestamp
+      } else {
+        setMessages([]);
+      }
+    });
+
+    return () => unsubscribe(); 
+  }, []);
+
+  // Send a new message
+  const sendMessage = () => {
+    if (messageText.trim() === "") return; // Ignore empty messages
+
+    const newMessage = {
+      senderId: currentUser.uid,
+      receiverId: secondUser.id,
+      text: messageText,
+      timestamp: Date.now(),
+    };
+
+    messagesRef.push(newMessage, (error) => {
+      if (error) {
+        console.error("Error sending message:", error);
+      } else {
+        setMessageText(""); // Clear input
+      }
+    });
+  };
+
+  // Render a single message
+  const renderMessage = ({ item }) => (
+    <View
+      style={[
+        styles.messageBubble,
+        item.senderId === currentUser.uid
+          ? styles.sentMessage
+          : styles.receivedMessage,
+      ]}>
+      <Text style={styles.messageText}>{item.text}</Text>
+    </View>
+  );
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>
-        Chat between {currentUser.nom} and {secondUser.nom}
-      </Text>
-      <View style={styles.userInfo}>
-        <Text style={styles.userTitle}>Your Info:</Text>
-        <Text>Pseudo: {currentUser.pseudo}</Text>
-        <Text>Phone: {currentUser.phone}</Text>
+    <KeyboardAvoidingView style={styles.container} behavior="padding">
+      <FlatList
+        data={messages}
+        keyExtractor={(item) => item.id}
+        renderItem={renderMessage}
+        contentContainerStyle={styles.messagesList}
+      />
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          placeholder="Type a message..."
+          value={messageText}
+          onChangeText={setMessageText}
+        />
+        <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.userInfo}>
-        <Text style={styles.userTitle}>Other User Info:</Text>
-        <Text>Pseudo: {secondUser.pseudo}</Text>
-        <Text>Phone: {secondUser.phone}</Text>
-      </View>
-      {/* You can implement the chat UI here */}
-      <View style={styles.chatBox}>
-        <Text style={styles.chatPlaceholder}>
-          Chat messages will appear here.
-        </Text>
-      </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  userInfo: {
-    marginBottom: 20,
+  messagesList: {
     padding: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 5,
   },
-  userTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 5,
-  },
-  chatBox: {
-    flex: 1,
-    marginTop: 20,
+  messageBubble: {
     padding: 10,
+    borderRadius: 8,
+    marginVertical: 5,
+    maxWidth: "80%",
+  },
+  sentMessage: {
+    alignSelf: "flex-end",
+    backgroundColor: "#d1e7ff",
+  },
+  receivedMessage: {
+    alignSelf: "flex-start",
     backgroundColor: "#e6e6e6",
+  },
+  messageText: {
+    fontSize: 16,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    padding: 10,
+    borderTopWidth: 1,
+    borderColor: "#ccc",
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    padding: 10,
+    marginRight: 10,
+  },
+  sendButton: {
+    backgroundColor: "#007bff",
+    padding: 10,
     borderRadius: 5,
     justifyContent: "center",
     alignItems: "center",
   },
-  chatPlaceholder: {
-    color: "#888",
-    fontStyle: "italic",
+  sendButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

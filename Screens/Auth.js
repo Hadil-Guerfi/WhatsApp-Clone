@@ -44,8 +44,9 @@ style={styles.textinputstyle}/>
     auth
       .signInWithEmailAndPassword(email, pass)
       .then(() => {
+      
         props.navigation.replace("Home", {
-          currentid: auth.currentUser.uid,
+          currentId: auth.currentUser.uid,
         });
       })
       .catch((error) => alert(error));

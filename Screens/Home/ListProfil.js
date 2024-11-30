@@ -9,10 +9,12 @@ import {
   TouchableOpacity,
 } from "react-native";
 import firebase from "../../config/index";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import "firebase/compat/auth";
 
 const database = firebase.database();
 const ref_tableProfile = database.ref("Tabledeprofils");
+const auth = firebase.auth();
 
 export default function ListProfil() {
   const [profiles, setProfiles] = useState([]);
@@ -23,6 +25,8 @@ export default function ListProfil() {
   const route = useRoute(); // Get route params
   const { currentId } = route.params; // Destructure currentId from params
 
+  
+  console.log(currentUser)
   useEffect(() => {
     const fetchProfiles = () => {
       ref_tableProfile.on("value", (snapshot) => {
@@ -32,6 +36,7 @@ export default function ListProfil() {
             id: key,
             ...data[key],
           }));
+          
 
           const foundUser = profilesArray.find(
             (profile) => profile.id === currentId
@@ -41,7 +46,7 @@ export default function ListProfil() {
             setCurrentUser(foundUser);
             setProfiles(
               profilesArray.filter((profile) => profile.id !== currentId)
-            ); // Exclude the current user from the list
+            ); 
           } else {
             setProfiles(profilesArray);
           }
@@ -100,7 +105,12 @@ export default function ListProfil() {
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.chatButton}
-        onPress={() => navigation.navigate("Chat", {currentUser, secondUser: item })}>
+        onPress={() =>
+          navigation.navigate("Chat", {
+            currentUser: auth.currentUser,
+            secondUser: item,
+          })
+        }>
         <Text style={styles.chatButtonText}>Start Chat</Text>
       </TouchableOpacity>
     </View>
